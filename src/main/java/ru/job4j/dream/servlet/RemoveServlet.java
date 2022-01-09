@@ -1,5 +1,6 @@
 package ru.job4j.dream.servlet;
 
+import ru.job4j.dream.config.Config;
 import ru.job4j.dream.store.Store;
 
 import javax.servlet.ServletException;
@@ -10,6 +11,8 @@ import java.io.File;
 import java.io.IOException;
 
 public class RemoveServlet extends HttpServlet {
+    String imagePath = Config.getConfig().getProperty("path.images");
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -23,7 +26,7 @@ public class RemoveServlet extends HttpServlet {
         req.setCharacterEncoding("UTF-8");
         Store.instOf().remove(Integer.parseInt(req.getParameter("id")));
         resp.sendRedirect(req.getContextPath() + "/candidates.do");
-        File file = new File("c:\\images\\" + req.getParameter("id") + ".jpg");
+        File file = new File(imagePath + req.getParameter("id") + ".jpg");
         file.delete();
     }
 }
