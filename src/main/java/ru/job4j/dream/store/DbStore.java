@@ -3,6 +3,8 @@ package ru.job4j.dream.store;
 import org.apache.commons.dbcp2.BasicDataSource;
 import ru.job4j.dream.model.Candidate;
 import ru.job4j.dream.model.Post;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -16,9 +18,9 @@ import java.util.List;
 import java.util.Properties;
 
 public class DbStore implements Store {
-    private static final DbStore instance = new DbStore();
 
     private final BasicDataSource pool = new BasicDataSource();
+    private static final Logger LOG = LoggerFactory.getLogger(DbStore.class.getName());
 
     private DbStore() {
         Properties cfg = new Properties();
@@ -65,7 +67,7 @@ public class DbStore implements Store {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.info("Unable to execute findAllPosts", e);
         }
         return posts;
     }
@@ -82,7 +84,7 @@ public class DbStore implements Store {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.info("Unable to execute findAllCandidates", e);
         }
         return candidates;
     }
@@ -103,7 +105,7 @@ public class DbStore implements Store {
             ps.setInt(2, post.getId());
             ps.executeUpdate();
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.info("Unable to update Post", e);
         }
     }
 
@@ -119,7 +121,7 @@ public class DbStore implements Store {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.info("Unable to find Post", e);
         }
         return null;
     }
@@ -137,7 +139,7 @@ public class DbStore implements Store {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.info("Unable to create Post", e);
         }
         return post;
     }
