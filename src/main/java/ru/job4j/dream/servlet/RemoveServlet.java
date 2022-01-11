@@ -1,7 +1,7 @@
 package ru.job4j.dream.servlet;
 
 import ru.job4j.dream.config.Config;
-import ru.job4j.dream.store.MemStore;
+import ru.job4j.dream.store.DbStore;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -16,7 +16,7 @@ public class RemoveServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        req.setAttribute("candidates", MemStore.instOf().findAllCandidates());
+        req.setAttribute("candidates", DbStore.instOf().findAllCandidates());
         req.getRequestDispatcher("candidates.jsp").forward(req, resp);
     }
 
@@ -24,7 +24,7 @@ public class RemoveServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws IOException {
         req.setCharacterEncoding("UTF-8");
-        MemStore.instOf().remove(Integer.parseInt(req.getParameter("id")));
+        DbStore.instOf().deleteCandidate (Integer.parseInt(req.getParameter("id")));
         resp.sendRedirect(req.getContextPath() + "/candidates.do");
         File file = new File(imagePath + req.getParameter("id") + ".jpg");
         file.delete();
