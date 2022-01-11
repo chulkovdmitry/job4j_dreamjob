@@ -56,6 +56,7 @@ public class DbStore implements Store {
         return Lazy.INST;
     }
 
+    @Override
     public Collection<Post> findAllPosts() {
         List<Post> posts = new ArrayList<>();
         try (Connection cn = pool.getConnection();
@@ -70,6 +71,32 @@ public class DbStore implements Store {
             LOG.info("Unable to execute findAllPosts", e);
         }
         return posts;
+    }
+
+    @Override
+    public void savePost(Post post) {
+        if (post.getId() == 0) {
+            create(post);
+        } else {
+            update(post);
+        }
+    }
+
+    @Override
+    public Post findPostById(int id) {
+        try (Connection cn = pool.getConnection();
+             PreparedStatement ps =  cn.prepareStatement("SELECT * FROM post WHERE id = ?")
+        ) {
+            ps.setInt(1, id);
+            try (ResultSet it = ps.executeQuery()) {
+                if (it.next()) {
+                    return new Post(it.getInt("id"), it.getString("name"));
+                }
+            }
+        } catch (Exception e) {
+            LOG.info("Unable to find Post", e);
+        }
+        return null;
     }
 
     @Override
@@ -90,40 +117,41 @@ public class DbStore implements Store {
     }
 
     @Override
-    public void save(Post post) {
-        if (post.getId() == 0) {
-            create(post);
+    public void saveCandidate(Candidate candidate) {
+        if (candidate.getId() == 0) {
+            create(candidate);
         } else {
-            update(post);
-        }
-    }
-
-    private void update(Post post) {
-        try (Connection cn = pool.getConnection();
-             PreparedStatement ps = cn.prepareStatement("UPDATE post SET name = ? where id = ?")) {
-            ps.setString(1, post.getName());
-            ps.setInt(2, post.getId());
-            ps.executeUpdate();
-        } catch (Exception e) {
-            LOG.info("Unable to update Post", e);
+            update(candidate);
         }
     }
 
     @Override
-    public Post findById(int id) {
+    public Candidate findCandidateById(int id) {
         try (Connection cn = pool.getConnection();
-             PreparedStatement ps =  cn.prepareStatement("SELECT * FROM post WHERE id = ?")
+             PreparedStatement ps = cn.prepareStatement("SELECT * FROM candidate WHERE id = ?")
         ) {
             ps.setInt(1, id);
             try (ResultSet it = ps.executeQuery()) {
                 if (it.next()) {
-                    return new Post(it.getInt("id"), it.getString("name"));
+                    return new Candidate(it.getInt("id"), it.getString("name"));
                 }
             }
         } catch (Exception e) {
-            LOG.info("Unable to find Post", e);
+            LOG.info("Unable to find Candidate", e);
         }
         return null;
+    }
+
+    @Override
+    public void deleteCandidate(int id) {
+        try (Connection cn = pool.getConnection();
+             PreparedStatement ps = cn.prepareStatement("DELETE FROM candidate WHERE id = ?")
+        ) {
+            ps.setInt(1, id);
+            ps.executeUpdate();
+        } catch (Exception e) {
+            LOG.info("Unable to delete Candidate", e);
+        }
     }
 
     private Post create(Post post) {
@@ -144,4 +172,43 @@ public class DbStore implements Store {
         return post;
     }
 
+    private void update(Post post) {
+        try (Connection cn = pool.getConnection();
+             PreparedStatement ps = cn.prepareStatement("UPDATE post SET name = ? where id = ?")) {
+            ps.setString(1, post.getName());
+            ps.setInt(2, post.getId());
+            ps.executeUpdate();
+        } catch (Exception e) {
+            LOG.info("Unable to update Post", e);
+        }
+    }
+
+    private Candidate create(Candidate candidate) {
+        try (Connection cn = pool.getConnection();
+             PreparedStatement ps =  cn.prepareStatement("INSERT INTO candidate(name) VALUES (?)",
+                     PreparedStatement.RETURN_GENERATED_KEYS)
+        ) {
+            ps.setString(1, candidate.getName());
+            ps.execute();
+            try (ResultSet id = ps.getGeneratedKeys()) {
+                if (id.next()) {
+                    candidate.setId(id.getInt(1));
+                }
+            }
+        } catch (Exception e) {
+            LOG.info("Unable to create Candidate", e);
+        }
+        return candidate;
+    }
+
+    private void update(Candidate candidate) {
+        try (Connection cn = pool.getConnection();
+             PreparedStatement ps = cn.prepareStatement("UPDATE candidate SET name = ? where id = ?")) {
+            ps.setString(1, candidate.getName());
+            ps.setInt(2, candidate.getId());
+            ps.executeUpdate();
+        } catch (Exception e) {
+            LOG.info("Unable to update Candidate", e);
+        }
+    }
 }

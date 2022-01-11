@@ -8,9 +8,15 @@ import java.util.Collection;
 public interface Store {
     Collection<Post> findAllPosts();
 
+    void savePost(Post post);
+
+    Post findPostById(int id);
+
     Collection<Candidate> findAllCandidates();
 
-    void save(Post post);
+    void saveCandidate(Candidate candidate);
 
-    Post findById(int id);
+    Candidate findCandidateById(int id);
+
+    void deleteCandidate(int id);
 }
