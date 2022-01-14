@@ -301,4 +301,22 @@ public class DbStore implements Store {
         return null;
     }
 
+    @Override
+    public User findUserByEmail(String email) {
+        try (Connection cn = pool.getConnection();
+             PreparedStatement ps =  cn.prepareStatement("SELECT * FROM users WHERE email = ?")
+        ) {
+            ps.setString(1, email);
+            try (ResultSet it = ps.executeQuery()) {
+                if (it.next()) {
+                    return new User(
+                            it.getInt("id"),
+                            it.getString("name"));
+                }
+            }
+        } catch (Exception e) {
+            LOG.error("public User findUserByEmail(String email)", e);
+        }
+        return null;
+    }
 }
