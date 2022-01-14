@@ -3,6 +3,7 @@ package ru.job4j.dream.store;
 import org.apache.commons.dbcp2.BasicDataSource;
 import ru.job4j.dream.model.Candidate;
 import ru.job4j.dream.model.Post;
+import ru.job4j.dream.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -211,4 +212,93 @@ public class DbStore implements Store {
             LOG.info("Unable to update Candidate", e);
         }
     }
+
+    @Override
+    public Collection<User> findAllUsers() {
+        List<User> users = new ArrayList<>();
+        try (Connection cn = pool.getConnection();
+             PreparedStatement ps =  cn.prepareStatement("SELECT * FROM users")
+        ) {
+            try (ResultSet it = ps.executeQuery()) {
+                while (it.next()) {
+                    users.add(new User(it.getInt("id"), it.getString("name")));
+                }
+            }
+        } catch (Exception e) {
+            LOG.error("public Collection<User> findAllUsers()", e);
+        }
+        return users;
+    }
+
+    @Override
+    public void saveUser(User user) {
+        if (user.getId() == 0) {
+            createUser(user);
+        } else {
+            updateUser(user);
+        }
+    }
+
+    private User createUser(User user) {
+        try (Connection cn = pool.getConnection();
+             PreparedStatement ps =  cn.prepareStatement(
+                     "INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
+                     PreparedStatement.RETURN_GENERATED_KEYS)
+        ) {
+            ps.setString(1, user.getName());
+            ps.setString(2, user.getEmail());
+            ps.setString(3, user.getPassword());
+            ps.execute();
+            try (ResultSet id = ps.getGeneratedKeys()) {
+                if (id.next()) {
+                    user.setId(id.getInt(1));
+                }
+            }
+        } catch (Exception e) {
+            LOG.error("private User createUser(User user)", e);
+        }
+        return user;
+    }
+
+    private void updateUser(User user) {
+        try (Connection cn = pool.getConnection();
+             PreparedStatement ps = cn.prepareStatement(
+                     "UPDATE users SET name = ?, email = ?, password = ?, where id = ?")) {
+            ps.setString(1, user.getName());
+            ps.setInt(2, user.getId());
+            ps.setString(3, user.getPassword());
+            ps.executeUpdate();
+        } catch (Exception e) {
+            LOG.error("private void updateUser(User user)", e);
+        }
+    }
+
+    @Override
+    public void deleteUser(int id) {
+        try (Connection cn = pool.getConnection();
+             PreparedStatement ps = cn.prepareStatement("DELETE FROM users WHERE id = ?")) {
+            ps.setInt(1, id);
+            ps.executeUpdate();
+        } catch (Exception e) {
+            LOG.error("public void deleteUser(int id)", e);
+        }
+    }
+
+    @Override
+    public User findByIdUser(int id) {
+        try (Connection cn = pool.getConnection();
+             PreparedStatement ps =  cn.prepareStatement("SELECT * FROM users WHERE id = ?")
+        ) {
+            ps.setInt(1, id);
+            try (ResultSet it = ps.executeQuery()) {
+                if (it.next()) {
+                    return new User(it.getInt("id"), it.getString("name"));
+                }
+            }
+        } catch (Exception e) {
+            LOG.error("public User findByIdUser(int id)", e);
+        }
+        return null;
+    }
+
 }
