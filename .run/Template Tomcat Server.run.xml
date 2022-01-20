@@ -83,6 +83,7 @@
       <option name="Make" enabled="true" />
       <option name="BuildArtifacts" enabled="true">
         <artifact name="job4j_dreamjob:war exploded" />
+        <artifact name="job4j_dreamjob:war" />
       </option>
     </method>
   </configuration>
