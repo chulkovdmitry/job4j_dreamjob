@@ -51,7 +51,8 @@ public class DbStore implements Store {
 
     @Override
     public Collection<Post> findRecentPosts() {
-        return findPostsByQuery("select * from post where created between now() - interval '1 day' AND now()");
+        return findPostsByQuery("SELECT * FROM post WHERE created BETWEEN (SELECT now() AT TIME ZONE 'Europe/Moscow') "
+                + "- INTERVAL '24 hours' AND (SELECT now() AT TIME ZONE 'Europe/Moscow')");
     }
 
     @Override
@@ -87,7 +88,9 @@ public class DbStore implements Store {
 
     @Override
     public Collection<Candidate> findRecentCandidates() {
-        return findCandidatesByQuery("select * from candidate where created between now() - interval '1 day' AND now()");
+        return findCandidatesByQuery("SELECT * FROM candidate "
+                + "WHERE created BETWEEN (SELECT now() AT TIME ZONE 'Europe/Moscow') "
+                + "- INTERVAL '24 hours' AND (SELECT now() AT TIME ZONE 'Europe/Moscow')");
     }
 
     @Override
