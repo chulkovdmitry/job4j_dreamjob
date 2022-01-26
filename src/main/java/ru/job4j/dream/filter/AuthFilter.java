@@ -6,27 +6,30 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 public class AuthFilter implements Filter {
+
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
+
     }
 
     @Override
-    public void doFilter(ServletRequest sreq, ServletResponse sresp, FilterChain chain) throws IOException, ServletException {
+    public void doFilter(ServletRequest sreq, ServletResponse sres, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest req = (HttpServletRequest) sreq;
-        HttpServletResponse resp = (HttpServletResponse) sresp;
+        HttpServletResponse res = (HttpServletResponse) sres;
         String uri = req.getRequestURI();
-        if (uri.endsWith("auth.do") || uri.endsWith("reg.do")) {
-            chain.doFilter(sreq, sresp);
+        if (uri.endsWith("auth.do") || uri.endsWith("reg.do") || uri.endsWith("index.do")) {
+            chain.doFilter(sreq, sres);
             return;
         }
         if (req.getSession().getAttribute("user") == null) {
-            resp.sendRedirect(req.getContextPath() + "/login.jsp");
+            res.sendRedirect(req.getContextPath() + "/login.jsp");
             return;
         }
-        chain.doFilter(sreq, sresp);
+        chain.doFilter(sreq, sres);
     }
 
     @Override
     public void destroy() {
+
     }
 }

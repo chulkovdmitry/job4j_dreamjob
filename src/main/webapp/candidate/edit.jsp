@@ -3,65 +3,42 @@
 <%@ page import="ru.job4j.dream.model.Candidate" %>
 <!doctype html>
 <html lang="en">
-<head>
-    <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
-          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
-            integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
-            integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
-            integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
-
-    <title>Работа мечты</title>
-</head>
+<jsp:include page="../header.jsp" />
 <body>
-<%
-    String id = request.getParameter("id");
-    Candidate candidate = new Candidate(0, "");
-    if (id != null) {
-        candidate = DbStore.instOf().findCandidateById(Integer.valueOf(id));
-    }
-%>
-<div class="container pt-3">
-    <div class="row">
-        <ul class="nav">
-            <li class="nav-item">
-                <a class="nav-link" href="<%=request.getContextPath()%>/post.do">Вакансии</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="<%=request.getContextPath()%>/candidate.do">Кандидаты</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="<%=request.getContextPath()%>/post/edit.jsp">Добавить вакансию</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="<%=request.getContextPath()%>/candidate/edit.jsp">Добавить кандидата</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="<%=request.getContextPath()%>/login.jsp"> <c:out value="${user.name}"/> | Выйти</a>
-            </li>
-        </ul>
-    </div>
-    <div class="row">
+<div class="container">
+    <jsp:include page="../navbar.jsp" />
+    <%
+        String id = request.getParameter("id");
+        Candidate candidate = new Candidate(0, "");
+        if (id != null) {
+            candidate = DbStore.instOf().findCandidateById(Integer.parseInt(id));
+        }
+    %>
+    <div class="row pt-3">
         <div class="card" style="width: 100%">
             <div class="card-header">
                 <% if (id == null) { %>
-                Новый кандидат.
+                Новый кандидат
                 <% } else { %>
-                Редактирование кандидата.
+                Редактирование кандидата
                 <% } %>
             </div>
             <div class="card-body">
-                <form action="<%=request.getContextPath()%>/candidates.do?id=<%=candidate.getId()%>" method="post">
+                <form action="<%=request.getContextPath()%>/candidates.do?id=<%=candidate.getId()%>" method="post" id="form">
+                    <div id="error" class="alert alert-danger" style="display: none">Не удалось сохранить кандидата</div>
+                    <input type="hidden" id="id" value="<%=candidate.getId()%>">
                     <div class="form-group">
                         <label>Имя</label>
-                        <input type="text" class="form-control" name="name" value="<%=candidate.getName()%>">
+                        <input type="text" class="form-control" name="name" value="<%=candidate.getName()%>" id="name">
+                        <small class="form-text text-muted" style="color: red!important; display: none;">Заполните поле</small>
+                    </div>
+                    <input type="hidden" id="cityId" value="<%=candidate.getCityId()%>">
+                    <div class="form-group">
+                        <label>Город</label>
+                        <select class="form-control" id="cities">
+                            <option></option>
+                        </select>
+                        <small class="form-text text-muted" style="color: red!important; display: none;">Заполните поле</small>
                     </div>
                     <button type="submit" class="btn btn-primary">Сохранить</button>
                 </form>
@@ -69,5 +46,56 @@
         </div>
     </div>
 </div>
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $.ajax({
+            type: 'GET',
+            url: 'http://localhost:8080/dreamjob/cities',
+            dataType: 'json'
+        }).done(function (data) {
+            for (let city of data) {
+                $('#cities').append(`<option value="${city.id}">${city.name}</option>`)
+            }
+            const cityId = $("#cityId").val();
+            if (cityId !== "") {
+                $(`#cities option[value='${cityId}']`).prop('selected', true)
+            }
+        }).fail(function (err) {
+            console.log(err);
+        });
+        $("#form").submit(function (e) {
+            e.preventDefault();
+            const url = `http://${location.host}/dreamjob/candidates.do`;
+            const nameInput = $("#name");
+            const cityOption = $("#cities option:selected");
+            if (nameInput.val() === "") {
+                nameInput.addClass("is-invalid");
+                nameInput.next().show();
+            }
+            if (cityOption.val() === "") {
+                cityOption.parent().addClass("is-invalid");
+                cityOption.parent().next().show();
+            }
+            if (nameInput.val() !== "" && cityOption.val() !== "") {
+                $.ajax({
+                    type: 'POST',
+                    url: url,
+                    data: JSON.stringify({
+                        id: $("#id").val(),
+                        name: nameInput.val(),
+                        cityId: cityOption.val()
+                    }),
+                    dataType: 'json'
+                }).done(function (data) {
+                    window.location.replace(url);
+                }).fail(function (err) {
+                    console.log(err);
+                    $("#error").show();
+                });
+            }
+        });
+    });
+</script>
 </body>
 </html>

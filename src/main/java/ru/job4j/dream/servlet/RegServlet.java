@@ -11,19 +11,22 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
 public class RegServlet extends HttpServlet {
+
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
         String name = req.getParameter("name");
         String email = req.getParameter("email");
         String password = req.getParameter("password");
-        if (DbStore.instOf().findUserByEmail(email) != null) {
-            req.setAttribute("error", "Email занят");
+        User userWithSameEmail = DbStore.instOf().findUserByEmail(email);
+        if (userWithSameEmail != null) {
+            req.setAttribute("error", "Email занят другим пользователем");
             req.getRequestDispatcher("reg.jsp").forward(req, res);
         } else {
-            DbStore.instOf().saveUser(new User(name, email, password));
+            DbStore.instOf().saveUser(new User(0, name, email, password));
+            User userInDb = DbStore.instOf().findUserByEmail(email);
             HttpSession session = req.getSession();
-            session.setAttribute("user", DbStore.instOf().findUserByEmail(email));
-            res.sendRedirect(req.getContextPath() + "/post.do");
+            session.setAttribute("user", userInDb);
+            res.sendRedirect(req.getContextPath() + "/posts.do");
         }
     }
 }
