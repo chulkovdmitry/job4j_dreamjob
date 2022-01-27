@@ -51,7 +51,7 @@
     $(document).ready(function () {
         $.ajax({
             type: 'GET',
-            url: 'http://localhost:8080/dreamjob/cities',
+            url: 'http://${location.host}/dreamjob/cities',
             dataType: 'json'
         }).done(function (data) {
             for (let city of data) {
